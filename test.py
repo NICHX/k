@@ -1,5 +1,4 @@
 from time import sleep
-
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -26,7 +25,7 @@ driver = webdriver.Chrome(options=chrome_options)
 # driver = webdriver.Chrome()  # 谷歌浏览器
 driver.get(
     'https://www.zaixiankaoshi.com/online/?paperId=11522202&practice=&modal=1&is_recite=&qtype=&text=%E9%A1%BA%E5%BA'
-    '%8F%E7%BB%83%E4%B9%A0&sequence=0&is_collect=1&is_vip_paper=0')
+    '%8F%E7%BB%83%E4%B9%A0&sequence=0&is_collect=1&is_vip_paper=0') # 题库地址
 driver.implicitly_wait(1)
 driver.find_element(By.XPATH, '//*[@id="body"]/div[2]/div[1]/div[2]/div[2]/div[2]/div[1]/p[2]/span[2]/div').click()
 
@@ -73,6 +72,5 @@ for i in range(1259):
     # 点击下一条
     driver.find_element(By.CLASS_NAME, 'el-button--primary').click()
 
-# 存储表格
 # 退出浏览器
 driver.quit()

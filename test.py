@@ -7,7 +7,11 @@ import time
 import os
 import subprocess
 import re
+import io
+import sys
 from gooey import Gooey, GooeyParser
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='gb18030')  # 改变标准输出的默认编码
 
 
 @Gooey(language='chinese', program_name=u'kaoshibao', required_cols=2, optional_cols=2,
@@ -32,10 +36,11 @@ def main_window():
     subgroup.add_argument('题库地址', help="请收藏题库后打开顺序练习复制地址", widget='TextField')
     subgroup.add_argument('题目数量', help="输入题库题目数量")
     subgroup.add_argument('保存目录', help="请选择想要保存到的目录", widget='DirChooser')
+    subgroup.add_argument('保存文件名', help="保存文件名,无需后缀", widget='TextField')
 
     args = parser.parse_args()
     if args.command == 'kaoshibao':
-        download_ques(args.谷歌浏览器安装位置, args.题目数量, args.题库地址, args.保存目录)
+        download_ques(args.谷歌浏览器安装位置, args.题目数量, args.题库地址, args.保存目录, args.保存文件名)
 
 
 def replace_letter(text, replace_letter):
@@ -43,7 +48,7 @@ def replace_letter(text, replace_letter):
     return pattern.sub(replace_letter, text)
 
 
-def download_ques(谷歌浏览器安装位置, 题目数量, 题库地址, 保存目录):
+def download_ques(谷歌浏览器安装位置, 题目数量, 题库地址, 保存目录, 保存文件名):
     # 先切换到chrome可执行文件的路径
     os.chdir(谷歌浏览器安装位置)
     # user-data-dir为路径
@@ -89,9 +94,11 @@ def download_ques(谷歌浏览器安装位置, 题目数量, 题库地址, 保�
         ques = title.replace("\n", "") + ' ' + part.replace("\n", " ") + ' ' + answer.replace("\n",
                                                                                               "") + ' ' + analysis.replace(
             "\n", " ") + '\n'
-        print(ques, flush=True)
-        with open(保存目录 + '/paper.txt', "a") as f:
-            f.write(ques)  # 自带文件关闭功能，不需要再写f.close()
+        ques = ques.encode('gb18030')
+        ques1 = ques.decode('gb18030')
+        print(ques1, flush=True)
+        with open(保存目录 + '/' + 保存文件名 + '.txt', "a", encoding='utf8') as f:
+            f.write(ques1)  # 自带文件关闭功能，不需要再写f.close()
         # 第1条数据 最大化窗口
         if i == 0:
             driver.maximize_window()
@@ -102,7 +109,7 @@ def download_ques(谷歌浏览器安装位置, 题目数量, 题库地址, 保�
     # 存储表格
     # 退出浏览器
     driver.quit()
-    os.startfile(保存目录 + '/paper.txt')
+    os.startfile(保存目录 + '/' + 保存文件名 + '.txt')
 
 
 if __name__ == '__main__':

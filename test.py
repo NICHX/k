@@ -1,4 +1,5 @@
-# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -22,12 +23,13 @@ from gooey import Gooey, GooeyParser
            }]
        }])
 def main_window():
-    parser = GooeyParser(description="Created by FWT !")
+    parser = GooeyParser(description="Created by NICHX !")
     subs = parser.add_subparsers(help='commands', dest='command')
     ticket_parser = subs.add_parser('kaoshibao', help='kaoshibao题库')
     subgroup = ticket_parser.add_argument_group('配置')
-    subgroup.add_argument('谷歌浏览器安装位置',default = "C:\Program Files\Google\Chrome\Application", help="谷歌浏览器安装位置", gooey_options={'full_width': True})
-    subgroup.add_argument('题库地址', help="请收藏题库后打开顺序练习复制地址", widget='TextField', gooey_options={'full_width': True})
+    subgroup.add_argument('谷歌浏览器安装位置', default="C:\Program Files\Google\Chrome\Application",
+                          help="谷歌浏览器安装位置")
+    subgroup.add_argument('题库地址', help="请收藏题库后打开顺序练习复制地址", widget='TextField')
     subgroup.add_argument('题目数量', help="输入题库题目数量")
     subgroup.add_argument('保存目录', help="请选择想要保存到的目录", widget='DirChooser')
 
@@ -41,13 +43,13 @@ def replace_letter(text, replace_letter):
     return pattern.sub(replace_letter, text)
 
 
-def download_ques(谷歌浏览器安装位置,题目数量, 题库地址, 保存目录):
+def download_ques(谷歌浏览器安装位置, 题目数量, 题库地址, 保存目录):
     # 先切换到chrome可执行文件的路径
     os.chdir(谷歌浏览器安装位置)
     # user-data-dir为路径
-    subprocess.Popen('chrome.exe --remote-debugging-port=9527 --user-data-dir="D:\project\kaoshibao\AutomationProfile"')
+    subprocess.Popen('chrome.exe --remote-debugging-port=9222 --user-data-dir="D:\project\kaoshibao\AutomationProfile"')
     chrome_options = Options()
-    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9527")
+    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(str(题库地址))
     driver.implicitly_wait(3)
@@ -88,7 +90,7 @@ def download_ques(谷歌浏览器安装位置,题目数量, 题库地址, 保存
                                                                                               "") + ' ' + analysis.replace(
             "\n", " ") + '\n'
         print(ques, flush=True)
-        with open(保存目录+'/paper.txt', "a") as f:
+        with open(保存目录 + '/paper.txt', "a") as f:
             f.write(ques)  # 自带文件关闭功能，不需要再写f.close()
         # 第1条数据 最大化窗口
         if i == 0:
@@ -100,6 +102,7 @@ def download_ques(谷歌浏览器安装位置,题目数量, 题库地址, 保存
     # 存储表格
     # 退出浏览器
     driver.quit()
+    os.startfile(保存目录 + '/paper.txt')
 
 
 if __name__ == '__main__':

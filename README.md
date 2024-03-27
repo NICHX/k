@@ -7,3 +7,4 @@
 6、按提示输入需要的选项<br />![image](https://github.com/NICHX/kaoshibao/assets/24547848/93d297aa-a427-4a89-86d8-e79bfe1da43a)<br />
 7、点击开始后会开始爬取题库，文件会保存在指定位置的‘paper.txt’并在爬取完成后自动打开文件<br />
 8、使用源代码自行打包时可能需要修改gooey/lib/site-packages/gooey/gui/processor.py，否则中文输出异常(参考https://www.cnblogs.com/yunhgu/p/15061756.html)
+9、题库ID就是paperid=后面那串数字![image](https://github.com/NICHX/kaoshibao/assets/24547848/a6a5d06e-0061-4c45-80b9-2e10ffbf9b0c)

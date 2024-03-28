@@ -55,19 +55,28 @@ def download_ques(考试宝帐号, 考试宝密码, 题目数量, 题库ID, 保�
     if button:
         button.click()
     for i in range(int(题目数量)):
-        answer = page.s_ele('正确答案').text.replace('\u2003', ':')
+        题型 = page.s_ele('@class=topic-type').text
+        if 题型 == '单选题':
+            option = page.s_ele('@class=select-left pull-left options-w').text
+        elif 题型 == '多选题':
+            option = page.s_ele('@class=select-left pull-left options-w check-box').text
+        elif 题型 == '判断题':
+            option = page.s_ele('@class=select-left pull-left options-w').text
+
         title = str(i + 1).lstrip() + "." + page.s_ele('@class=qusetion-box').text
-        option = page.s_ele('@class=select-left pull-left options-w').text
         formatted_option = "\n".join(
             f"{line[0]}. {line[1:]}" if line[0].isupper() else line for line in option.splitlines())
+        answer = page.s_ele('正确答案').text.replace('\u2003', ':')
         analysis = page.s_ele('@class=answer-analysis')
         if analysis:
             analysis = analysis.text
         if not analysis:
             analysis = '暂无解析'
         ques = title + '\n' + formatted_option + '\n' + answer + '\n解析：' + analysis + '\n'
-        page.ele('@class=el-button el-button--primary el-button--small').click()
-        time.sleep(1)
+        next_ques = page.ele('@class=el-button el-button--primary el-button--small')
+        if next_ques:
+            time.sleep(0.5)
+            next_ques.click()
         ques = ques.encode('gb18030')
         ques1 = ques.decode('gb18030')
         print(ques1, flush=True)

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from DrissionPage import ChromiumPage
 from gooey import Gooey, GooeyParser

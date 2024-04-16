@@ -1,9 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from DrissionPage import ChromiumPage
-import time
-import os
 from gooey import Gooey, GooeyParser
+import sys, codecs, os
+
+if sys.stdout.encoding != 'UTF-8':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+if sys.stderr.encoding != 'UTF- 8':
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 
 @Gooey(language='chinese', program_name=u'kaoshibao', required_cols=2, optional_cols=2,
@@ -15,11 +19,11 @@ from gooey import Gooey, GooeyParser
                'menuTitle': '关于',
                'name': 'kaoshibao',
                'description': 'Created by NICHX !',
-               'version': '0.1.1',
+               'version': '0.2.0',
            }]
        }])
 def main_window():
-    parser = GooeyParser(description="Created by NICHX !")
+    parser = GooeyParser(description="Created by NICHX !  该程序免费共享，请勿付费购买！\n作者邮箱：nichx@nichx.cn")
     subs = parser.add_subparsers(help='commands', dest='command')
     ticket_parser = subs.add_parser('kaoshibao', help='kaoshibao题库')
     subgroup = ticket_parser.add_argument_group('配置')
@@ -41,13 +45,16 @@ def download_ques(考试宝帐号, 考试宝密码, 题目数量, 题库ID, 保�
         # 跳转到登录页面
         page.get('https://www.kaoshibao.com/login/')
         # 定位到账号文本框，获取文本框元素
-        ele = page.s_ele('@placeholder=请输入您的11位手机号码')
+        ele = page.ele('@placeholder=请输入您的11位手机号码')
         # 输入对文本框输入账号
         ele.input(考试宝帐号)
         # 定位到密码文本框并输入密码
-        page.s_ele('@placeholder=请输入您的密码').input(考试宝密码)
+        page.ele('@placeholder=请输入您的密码').input(考试宝密码)
         # 点击登录按钮
-        page.s_ele('立即登录').click()
+        page.ele('立即登录').click()
+        page.wait.load_start()
+
+
     url = 'https://www.kaoshibao.com/online/?paperId=' + 题库ID
     page.get(url)
     # 打开背题模式
@@ -55,34 +62,42 @@ def download_ques(考试宝帐号, 考试宝密码, 题目数量, 题库ID, 保�
     if button:
         button.click()
     for i in range(int(题目数量)):
-        题型 = page.s_ele('@class=topic-type').text
+        题型 = page.ele('@class=topic-type').text
         if 题型 == '单选题':
             option = page.s_ele('@class=select-left pull-left options-w').text
+            answer = page.s_ele('正确答案').text.replace('\u2003', ':')
         elif 题型 == '多选题':
             option = page.s_ele('@class=select-left pull-left options-w check-box').text
+            answer = page.s_ele('正确答案').text.replace('\u2003', ':')
         elif 题型 == '判断题':
             option = page.s_ele('@class=select-left pull-left options-w').text
+            answer = page.s_ele('正确答案').text.replace('\u2003', ':')
+        elif 题型 == '填空题':
+            option = ''
+            answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
+        elif 题型 == '简答题':
+            option = ''
+            answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
 
-        title = str(i + 1).lstrip() + "." + page.s_ele('@class=qusetion-box').text
+        title = str(i + 1).lstrip() + "." + page.ele('@class=qusetion-box').text
         formatted_option = "\n".join(
             f"{line[0]}. {line[1:]}" if line[0].isupper() else line for line in option.splitlines())
-        answer = page.s_ele('正确答案').text.replace('\u2003', ':')
+        '''answer = page.ele('正确答案').text.replace('\u2003', ':')'''
         analysis = page.s_ele('@class=answer-analysis')
         if analysis:
             analysis = analysis.text
         if not analysis:
             analysis = '暂无解析'
-        ques = title + '\n' + formatted_option + '\n' + answer + '\n解析：' + analysis + '\n'
+        ques = f'{title} \n {formatted_option}\n {answer} \n解析： {analysis} \n'.replace('\n\n', '\n')
         next_ques = page.ele('@class=el-button el-button--primary el-button--small')
         if next_ques:
-            time.sleep(0.5)
             next_ques.click()
-        ques = ques.encode('gb18030')
-        ques1 = ques.decode('gb18030')
-        print(ques1, flush=True)
+            page.wait.load_start()
+        info = f'第{i + 1}题已完成'
+        print(info.encode('gb18030').decode('gb18030'), flush=True)
         filepath = 保存目录 + '/' + 保存文件名 + '.txt'
         with open(filepath, "a", encoding='utf8') as f:
-            f.write(ques1)  # 自带文件关闭功能，不需要再写f.close()
+            f.write(ques)  # 自带文件关闭功能，不需要再写f.close()
 
     os.startfile(filepath)
 

@@ -29,7 +29,7 @@ if sys.stderr.encoding != 'UTF- 8':
                'menuTitle': '关于',
                'name': '考试宝下载工具\n',
                'description': 'Created by NICHX !',
-               'version': '2.1.0',
+               'version': '2.1.2',
            }]
        }])
 def main_window():
@@ -72,15 +72,17 @@ def download_ques(ID, path, url=''):
     doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
     doc.styles['Normal'].font.size = Pt(11)
 
-    number = page.ele('@style=float: left; font-weight: 700;').text[2:-1]
+    number = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[1]/div/div[1]/div/span[2]').text[2:-1]
     # 打开背题模式
     try:
-        page.s_ele('背题模式').ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[2]/div[2]/div[1]/p[2]/span[2]/div').click()
-        page.wait(0.6, 1.5)
+        button_off = page.s_ele('@@role=switch@@class=el-switch')
+        if button_off:
+            page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[2]/div[2]/div[1]/p[2]/span[2]/div/input').click()
+            print('点击背题模式按钮')
+            page.wait(0.3, 1.0)
     except ElementNotFoundError:
         print('背题模式已打开')
-        page.wait(0.6, 1.5)
-    page.wait.eles_loaded('@class:ans-top')
+        page.wait(0.3, 0.9)
     for i in range(int(number)):
         title = f"{i + 1}. {page.ele('@class=qusetion-box').text}"
         doc.add_paragraph(title)
@@ -90,7 +92,7 @@ def download_ques(ID, path, url=''):
                 ques_img_url = ques_img.attr('src')
                 ques_img_url = f'{ques_img_url}'
                 page.download(ques_img_url, rf'.\imgs\{ID}\ques', rename=f'ques{i + 1}-title.png')
-                page.wait(0.6, 1.5)
+                page.wait(0.3, 0.6)
             doc.add_picture(rf'.\imgs\{ID}\ques\ques{i + 1}-title.png')
         except ElementNotFoundError:
             pass
@@ -106,22 +108,29 @@ def download_ques(ID, path, url=''):
                     x = j.s_ele('@class^before-icon')  # 更改此处，确保使用当前选项的'before-icon'元素
                     # 下载选项图片到指定目录，并重命名
                     page.download(option_img_url, rf'.\imgs\{ID}\option', rename=f'ques{i + 1}-option-{x.text}.png')
-                    page.wait(0.6, 1.5)
+                    page.wait(0.3, 0.6)
                     para = doc.add_paragraph()
-                    run = para.add_run(j.text)  # 添加选项文本
+                    list_j = list(j.text)
+                    list_j.insert(1, '.')
+                    str_j = ''.join(list_j)
+                    run = para.add_run(str_j)  # 添加选项文本
                     img_path = rf'.\imgs\{ID}\option\ques{i + 1}-option-{x.text}.png'
                     run.add_picture(img_path, width=Inches(2.5))
                 except Exception as e:
-                    text = j.text
-                    doc.add_paragraph(text)
-                    option += text + "\n"
+                    list_j = list(j.text)
+                    list_j.insert(1, '.')
+                    str_j = ''.join(list_j)
+                    doc.add_paragraph(str_j)
+                    option += str_j + "\n"
             answer = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace('\u2003', ':')
         elif topic == '判断题':
             options = page.ele('@class^select-left').children('@class^option')
             for j in options:
-                text = j.text
-                doc.add_paragraph(text)
-                option += text + "\n"
+                list_j = list(j.text)
+                list_j.insert(1, '.')
+                str_j = ''.join(list_j)
+                doc.add_paragraph(str_j)
+                option += str_j + "\n"
             answer = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace('\u2003', ':')
         elif topic == '多选题':
             options = page.s_eles('@class^option')
@@ -133,23 +142,28 @@ def download_ques(ID, path, url=''):
                     x = j.s_ele('@class^before-icon')  # 更改此处，确保使用当前选项的'before-icon'元素
                     # 下载选项图片到指定目录，并重命名
                     page.download(option_img_url, rf'.\imgs\{ID}\option', rename=f'ques{i + 1}-option-{x.text}.png')
-                    page.wait(0.6, 1.5)
+                    page.wait(0.3, 0.6)
                     para = doc.add_paragraph()
-                    run = para.add_run(j.text)  # 添加选项文本
+                    list_j = list(j.text)
+                    list_j.insert(1, '.')
+                    str_j = ''.join(list_j)
+                    run = para.add_run(str_j)  # 添加选项文本
                     img_path = rf'.\imgs\{ID}\option\ques{i + 1}-option-{x.text}.png'
                     run.add_picture(img_path, width=Inches(2.5))
                 except Exception as e:
-                    text = j.text
-                    doc.add_paragraph(text)
-                    option += text + "\n"
+                    list_j = list(j.text)
+                    list_j.insert(1, '.')
+                    str_j = ''.join(list_j)
+                    doc.add_paragraph(str_j)
+                    option += str_j + "\n"
             answer = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace('\u2003', ':')
         elif topic == '填空题':
             answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
         elif topic == '简答题':
             answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
 
-        formatted_option = "\n".join(
-            f"{line[0]}. {line[1:]}" if line[0].isupper() else line for line in option.splitlines())
+        '''formatted_option = "\n".join(
+            f"{line[0]}. {line[1:]}" if line[0].isupper() else line for line in option.splitlines())'''
 
         try:
             analysis = page.s_ele('@class^answer-analysis').text.replace('\n', '')
@@ -162,13 +176,13 @@ def download_ques(ID, path, url=''):
                     else:
                         analysis_img_url = f'{analysis_img_url}'
                         page.download(analysis_img_url, rf'.\imgs\{ID}\analysis', rename=f'ques{i + 1}-analysis.png')
-                        page.wait(0.6, 1.5)
+                        page.wait(0.3, 0.6)
             except ElementNotFoundError:
                 pass
         except Exception as e:
             print(e)
         if option != '':
-            ques = f'{title}\n{formatted_option}\n{answer}\n解析：{analysis}\n'
+            ques = f'{title}\n{option}\n{answer}\n解析：{analysis}\n'
         else:
             ques = f'{title}\n{answer}\n解析：{analysis}\n'
         try:

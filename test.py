@@ -3,7 +3,7 @@ import codecs
 import os
 import sys
 
-from DrissionPage import ChromiumPage
+from DrissionPage import ChromiumPage, SessionPage
 from DrissionPage.common import Settings
 from DrissionPage.errors import ElementNotFoundError
 from docx import Document
@@ -16,8 +16,10 @@ Settings.raise_when_ele_not_found = True
 
 if sys.stdout.encoding != 'UTF-8':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-if sys.stderr.encoding != 'UTF- 8':
+if sys.stderr.encoding != 'UTF-8':
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+version = '2.1.5'
 
 
 @Gooey(language='chinese', program_name=u'考试宝下载工具', required_cols=2, optional_cols=2,
@@ -28,29 +30,43 @@ if sys.stderr.encoding != 'UTF- 8':
                'type': 'AboutDialog',
                'menuTitle': '关于',
                'name': '考试宝下载工具\n',
-               'description': 'Created by NICHX !',
-               'version': '2.1.2',
+               'description': 'Created by NICHX !\n 1、修改了登陆逻辑 \n 2、修复部分报错',
+               'version': version,
            }]
        }])
 def main_window():
-    parser = GooeyParser(description="Created by NICHX !  该程序免费共享，请勿付费购买！\n作者邮箱：nichx@nichx.cn")
+    parser = GooeyParser(
+        description="Created by NICHX !  该程序免费共享，请勿付费购买！\n安装谷歌Chrome浏览器！")
     subs = parser.add_subparsers(help='考试宝下载工具', dest='command')
     normal_parser = subs.add_parser('考试宝', help='kaoshibao题库')
     subgroup = normal_parser.add_argument_group('考试宝')
-    subgroup.add_argument('考试宝帐号', help="必填")
-    subgroup.add_argument('考试宝密码', widget='PasswordField', help="必填")
+    '''subgroup.add_argument('考试宝帐号', help="必填")
+    subgroup.add_argument('考试宝密码', widget='PasswordField', help="必填")'''
     subgroup.add_argument('题库ID', help="请输入题库ID", widget='TextField')
     subgroup.add_argument('保存目录', help="请选择想要保存到的目录", widget='DirChooser')
 
     args = parser.parse_args()
+
     if args.command == '考试宝':
-        normal_log_in(args.考试宝帐号, args.考试宝密码)
-        download_ques(args.题库ID, args.保存目录, url='https://www.kaoshibao.com/online/?paperId=')
+        download_ques(args.题库ID, args.保存目录)
 
 
-def normal_log_in(telephone, password):
+def main():
+    page = SessionPage()
+    # 访问网页
+    page.get('https://space.nichx.cn/Version.txt')
+    remote_version = page.ele('text:version').text[10:]
+    if remote_version == version:
+        print(f'当前版本为{version} , 是最新版本')
+        main_window()
+    else:
+        print(f'当前版本为{version} , 最新版本为{remote_version} , 请到 https://share.nichx.cn//s/kaoshibao 下载最新版本')
+        input('Press Enter to exit...')
+
+
+def download_ques(ID, path):
     page = ChromiumPage()
-    page.get('https://www.kaoshibao.com/login/')
+    ''' page.get('https://www.zaixiankaoshi.com/login/')
     # 定位到账号文本框，获取文本框元素
     ele = page.ele('@placeholder=请输入您的11位手机号码')
     # 输入对文本框输入账号
@@ -59,19 +75,16 @@ def normal_log_in(telephone, password):
     page.ele('@placeholder=请输入您的密码').input(password)
     # 点击登录按钮
     page.ele('立即登录').click()
-    page.wait.load_start()
+    page.wait.load_start()'''
 
-
-def download_ques(ID, path, url=''):
-    page = ChromiumPage()
-    url = f'{url}+{ID}'
+    url = f'https://www.zaixiankaoshi.com/online/?paperId=+{ID}'
     page.get(url)
 
     doc = Document()
     doc.styles['Normal'].font.name = u'宋体'
     doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
     doc.styles['Normal'].font.size = Pt(11)
-
+    page.wait.eles_loaded('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[1]/div/div[1]/div/span[2]')
     number = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[1]/div/div[1]/div/span[2]').text[2:-1]
     # 打开背题模式
     try:
@@ -122,7 +135,7 @@ def download_ques(ID, path, url=''):
                     str_j = ''.join(list_j)
                     doc.add_paragraph(str_j)
                     option += str_j + "\n"
-            answer = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace('\u2003', ':')
+            answer = page.ele('@class=right-ans').text.replace('\u2003', ':')
         elif topic == '判断题':
             options = page.ele('@class^select-left').children('@class^option')
             for j in options:
@@ -131,7 +144,9 @@ def download_ques(ID, path, url=''):
                 str_j = ''.join(list_j)
                 doc.add_paragraph(str_j)
                 option += str_j + "\n"
-            answer = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace('\u2003', ':')
+            answer = page.ele(
+                'xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace(
+                '\u2003', ':')
         elif topic == '多选题':
             options = page.s_eles('@class^option')
             for j in options:
@@ -156,7 +171,9 @@ def download_ques(ID, path, url=''):
                     str_j = ''.join(list_j)
                     doc.add_paragraph(str_j)
                     option += str_j + "\n"
-            answer = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace('\u2003', ':')
+            answer = page.ele(
+                'xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/div/b').text.replace(
+                '\u2003', ':')
         elif topic == '填空题':
             answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
         elif topic == '简答题':
@@ -206,4 +223,5 @@ def download_ques(ID, path, url=''):
 
 
 if __name__ == '__main__':
-    main_window()
+    main()
+

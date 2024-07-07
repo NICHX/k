@@ -19,7 +19,7 @@ if sys.stdout.encoding != 'UTF-8':
 if sys.stderr.encoding != 'UTF-8':
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
-version = '2.1.5'
+version = '2.1.6'
 
 
 @Gooey(language='chinese', program_name=u'考试宝下载工具', required_cols=2, optional_cols=2,
@@ -30,7 +30,7 @@ version = '2.1.5'
                'type': 'AboutDialog',
                'menuTitle': '关于',
                'name': '考试宝下载工具\n',
-               'description': 'Created by NICHX !\n 1、修改了登陆逻辑 \n 2、修复部分报错',
+               'description': 'Created by NICHX !\n 1、修改了登陆逻辑 \n 2、修复部分报错 \n 3、增加自定义时间间隔，避免因网络波动导致题目重复',
                'version': version,
            }]
        }])
@@ -44,11 +44,12 @@ def main_window():
     subgroup.add_argument('考试宝密码', widget='PasswordField', help="必填")'''
     subgroup.add_argument('题库ID', help="请输入题库ID", widget='TextField')
     subgroup.add_argument('保存目录', help="请选择想要保存到的目录", widget='DirChooser')
+    subgroup.add_argument('延迟时间', help="爬取延迟时间，默认0.4，若有题目重复手动调高", widget='TextField', default='0.4')
 
     args = parser.parse_args()
 
     if args.command == '考试宝':
-        download_ques(args.题库ID, args.保存目录)
+        download_ques(args.题库ID, args.保存目录, args.延迟时间)
 
 
 def main():
@@ -64,9 +65,9 @@ def main():
         input('Press Enter to exit...')
 
 
-def download_ques(ID, path):
+def download_ques(ID, path, time):
     page = ChromiumPage()
-    ''' page.get('https://www.zaixiankaoshi.com/login/')
+    '''    page.get('https://www.zaixiankaoshi.com/login/')
     # 定位到账号文本框，获取文本框元素
     ele = page.ele('@placeholder=请输入您的11位手机号码')
     # 输入对文本框输入账号
@@ -77,7 +78,7 @@ def download_ques(ID, path):
     page.ele('立即登录').click()
     page.wait.load_start()'''
 
-    url = f'https://www.zaixiankaoshi.com/online/?paperId=+{ID}'
+    url = f'https://www.zaixiankaoshi.com/online/?paperId={ID}'
     page.get(url)
 
     doc = Document()
@@ -203,7 +204,8 @@ def download_ques(ID, path):
         else:
             ques = f'{title}\n{answer}\n解析：{analysis}\n'
         try:
-            page.ele('@@class:el-button el-button--primary el-button--small@@text():下一题', timeout=0.5).click()
+            page.ele('@@class:el-button el-button--primary el-button--small@@text():下一题', timeout=5).click()
+            page.wait(float(time))
         except Exception as e:
             print(e)
         # 添加答案段落
@@ -224,4 +226,3 @@ def download_ques(ID, path):
 
 if __name__ == '__main__':
     main()
-

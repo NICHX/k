@@ -10,6 +10,7 @@ from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Inches
 from docx.shared import Pt
+import xlwt
 from gooey import Gooey, GooeyParser
 
 Settings.raise_when_ele_not_found = True
@@ -47,13 +48,15 @@ def main_window():
     subgroup.add_argument('口令', help="请输入QQ群中获取的口令", widget='TextField')
     subgroup.add_argument('题库ID', help="请输入题库ID", widget='TextField')
     subgroup.add_argument('保存目录', help="请选择想要保存到的目录", widget='DirChooser')
+    subgroup.add_argument('默认打开文件', help="请选择完成后想要打开的文件类型", widget='Dropdown'
+                          , choices=['.txt', '.docx', '.xls', '不自动打开'], default='.docx')
     subgroup.add_argument('延迟时间', help="爬取延迟时间，默认0.4，若有题目重复手动调高", widget='TextField',
                           default='0.4')
 
     args = parser.parse_args()
 
     if args.command == '考试宝':
-        download_ques(args.题库ID, args.保存目录, args.延迟时间, args.口令)
+        download_ques(args.题库ID, args.保存目录, args.延迟时间, args.口令, args.默认打开文件)
 
 
 def main():
@@ -69,7 +72,7 @@ def main():
         input('Press Enter to exit...')
 
 
-def download_ques(ID, path, time, code):
+def download_ques(ID, path, time, code, format):
     page1 = SessionPage()
     page1.get('https://space.nichx.cn/code/code.txt')
     remote_code = page1.html
@@ -79,13 +82,29 @@ def download_ques(ID, path, time, code):
         print(f'口令错误或已更新,请到QQ群获取最新正确口令或联系管理员', flush=True)
         sys.exit(1)
 
-    url = f'https://www.zaixiankaoshi.com/online/?paperId={ID}'
-    page = ChromiumPage()
-    page.get(url)
     doc = Document()
     doc.styles['Normal'].font.name = u'宋体'
     doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
     doc.styles['Normal'].font.size = Pt(11)
+
+    wb = xlwt.Workbook(encoding='utf-8')  # 新建一个excel文件
+    ws1 = wb.add_sheet('sheet1')  # 添加一个新表，名字为first
+    ws1.write(0, 0, '序号')
+    ws1.write(0, 1, '题目')
+    ws1.write(0, 2, 'A')
+    ws1.write(0, 3, 'B')
+    ws1.write(0, 4, 'C')
+    ws1.write(0, 5, 'D')
+    ws1.write(0, 6, 'E')
+    ws1.write(0, 7, 'F')
+    ws1.write(0, 8, 'G')
+    ws1.write(0, 9, 'H')
+    ws1.write(0, 10, '正确答案')
+    ws1.write(0, 11, '解析')
+
+    url = f'https://www.zaixiankaoshi.com/online/?paperId={ID}'
+    page = ChromiumPage()
+    page.get(url)
     page.wait.eles_loaded('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[1]/div/div[1]/div/span[2]')
     number = page.ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[1]/div/div[1]/div/span[2]').text[2:-1]
     # 打开背题模式
@@ -100,8 +119,8 @@ def download_ques(ID, path, time, code):
         page.wait(0.3)
     for i in range(int(number)):
         try:
-            title = f"{i + 1}. {page.ele('@class=qusetion-box').text}"
-            doc.add_paragraph(title)
+            title = f"{page.ele('@class=qusetion-box').text}".replace('\n', '')
+            doc.add_paragraph(f'{i + 1}.{title}')
             try:
                 ques_img = page.s_ele('@class=qusetion-box').ele('tag:img')
                 if ques_img.link:
@@ -202,10 +221,12 @@ def download_ques(ID, path, time, code):
             except Exception as e:
                 print(e)
             if option != '':
-                option1 = option.replace('\n', ',')
-                ques = f'{title},{option1},{answer},解析：{analysis}\n'
+                ques = f'{i+1}.{title}\n{option}{answer}\n解析：{analysis}\n\n'
+                option1 = option.replace('\n', '&@')
+                ques1 = f'{i+1}&@{title}&@{option1}&@{answer[5:]}&@{analysis}\n'
             else:
-                ques = f'{title},{answer},解析：{analysis}\n'
+                ques = f'{i+1}.{title}\n{option}{answer}\n解析：{analysis}\n\n'
+                ques1 = f'{i+1}&@{title}&@{answer[5:]}&@{analysis}\n'
             # 添加答案段落
             doc.add_paragraph(answer)
             doc.add_paragraph(f'解析：{analysis} \n')
@@ -213,6 +234,27 @@ def download_ques(ID, path, time, code):
                 doc.add_picture(analysis_img[1])
             except Exception as e:
                 pass
+            list_a = ques1.split('&@')
+            while len(list_a) <= 4:
+                list_a.insert(2, '')
+            while 4 < len(list_a) < 12:
+                list_a.insert(-3, '')
+            try:
+                ws1.write(i+1, 0, int(list_a[0]))
+                ws1.write(i+1, 1, list_a[1])
+                ws1.write(i+1, 2, list_a[2])
+                ws1.write(i+1, 3, list_a[3])
+                ws1.write(i+1, 4, list_a[4])
+                ws1.write(i+1, 5, list_a[5])
+                ws1.write(i+1, 6, list_a[6])
+                ws1.write(i+1, 7, list_a[7])
+                ws1.write(i+1, 8, list_a[8])
+                ws1.write(i+1, 9, list_a[9])
+                ws1.write(i+1, 10, list_a[-2])
+                ws1.write(i+1, 11, list_a[-1])
+            except IndexError as e:
+                pass
+            wb.save(f'{path}/{ID}.xls')
             info = f'第{i + 1}题已完成'
             print(info, flush=True)
             filepath = f'{path}/{ID}.txt'
@@ -234,8 +276,14 @@ def download_ques(ID, path, time, code):
             except Exception as e:
                 print(e)
         continue
-
-    os.startfile(f'{path}/{ID}.docx')
+    if format == '.txt':
+        os.startfile(f'{path}/{ID}.txt')
+    elif format == '.docx':
+        os.startfile(f'{path}/{ID}.docx')
+    elif format == '.xls':
+        os.startfile(f'{path}/{ID}.xls')
+    elif format == '不自动打开':
+        print('不自动打开文件')
     try:
         os.startfile('error_log.txt')
     except FileNotFoundError:

@@ -73,7 +73,7 @@ def main():
 
 def download_ques(ID, path, time, code, format):
     page1 = SessionPage()
-    page1.get('https://space.nichx.cn/code/code.txt')
+    page1.get('https://space.nichx.cn/code/code_advanced.txt')
     remote_code = page1.html
     if remote_code == code:
         print(f'正确口令为{remote_code} , 校验通过', flush=True)
@@ -222,10 +222,10 @@ def download_ques(ID, path, time, code, format):
             if option != '':
                 ques = f'{i+1}.{title}\n{option}{answer}\n解析：{analysis}\n\n'
                 option1 = option.replace('\n', '&@')
-                ques1 = f'{i+1}&@{title}&@{option1}&@{answer[5:]}&@{analysis}\n'
+                ques1 = f'{i+1}&@{title}&@{option1}&@{answer[4:]}&@{analysis}\n'
             else:
                 ques = f'{i+1}.{title}\n{option}{answer}\n解析：{analysis}\n\n'
-                ques1 = f'{i+1}&@{title}&@{answer[5:]}&@{analysis}\n'
+                ques1 = f'{i+1}&@{title}&@{answer[4:]}&@{analysis}\n'
             # 添加答案段落
             doc.add_paragraph(answer)
             doc.add_paragraph(f'解析：{analysis} \n')

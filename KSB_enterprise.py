@@ -326,8 +326,7 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
-                doc.add_paragraph(answer)
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '判断题':
                 options = page.ele('@class^select-left').children('@class^option')
                 for j in options:
@@ -336,8 +335,7 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                     str_j = ''.join(list_j)
                     doc.add_paragraph(str_j)
                     option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
-                doc.add_paragraph(answer)
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '多选题':
                 options = page.s_eles('@class^option')
                 for j in options:
@@ -363,8 +361,7 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
-                doc.add_paragraph(answer)
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '不定项选择题':
                 options = page.s_eles('@class^option')
                 for j in options:
@@ -390,8 +387,7 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
-                doc.add_paragraph(answer)
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '排序题':
                 options = page.s_eles('@class^option')
                 for j in options:
@@ -417,47 +413,17 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
-                doc.add_paragraph(answer)
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '填空题':
                 answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
-                doc.add_paragraph(answer)
             elif topic == '简答题':
                 answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
-                doc.add_paragraph(answer)
-                try:
-                    answer_img = page.s_ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/p/span/p').ele('tag:img')
-                    if answer_img.link:
-                        answer_img_url = answer_img.attr('src')
-                        # ques_img_url = f'{ques_img_url}'
-                        answer_img = page.download(answer_img_url, rf'.\{ID}\imgs\answer', rename=f'ques{i + 1}-answer',
-                                                   file_exists='skip')
-                        page.wait(0.3)
-                except ElementNotFoundError:
-                    pass
             elif topic == '论述题':
                 answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
-                try:
-                    answer_img = page.s_ele('xpath://*[@id="body"]/div[2]/div[1]/div[2]/div[1]/div/div[3]/div[1]/div/div[1]/p/span/p').ele('tag:img')
-                    doc.add_paragraph(answer)
-                    if answer_img.link:
-                        answer_img_url = answer_img.attr('src')
-                        # ques_img_url = f'{ques_img_url}'
-                        answer_img = page.download(answer_img_url, rf'.\{ID}\imgs\answer', rename=f'ques{i + 1}-answer',
-                                                   file_exists='skip')
-                        page.wait(0.3)
-
-                        doc.add_picture(answer_img[1], width=Inches(2.5))
-                except ElementNotFoundError:
-                    pass
-
-            '''formatted_option = "\n".join(
-                f"{line[0]}. {line[1:]}" if line[0].isupper() else line for line in option.splitlines())'''
             analysis = ''
             if anl_switch == '是':
                 try:
                     analysis = '解析：' + page.s_ele('@class^answer-analysis').text.replace('\n', '')
-                    doc.add_paragraph(f'{analysis} \n')
                     try:
                         analysis_img = page.s_ele('@class^answer-analysis').ele('tag:img')
                         if analysis_img.link:
@@ -482,8 +448,22 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                 ques = f'{i + 1}.{title}\n{option}{answer}\n{analysis}\n\n'
                 ques1 = f'{i + 1}&@{title}&@{answer[5:]}&@{analysis}\n'
             # 添加答案段落
-
-
+            doc.add_paragraph(answer)
+            try:
+                answer_img = page.s_ele('@class^mt20', timeout=0.3).ele('tag:img', timeout=0.3)
+                if answer_img.link:
+                    answer_img_url = answer_img.attr('src')
+                    # ques_img_url = f'{ques_img_url}'
+                    answer_img = page.download(answer_img_url, rf'.\{ID}\imgs\answer', rename=f'ques{i + 1}-answer',
+                                               file_exists='skip')
+                doc.add_picture(check_suffix(answer_img[1]), width=Inches(2.5))
+            except ElementNotFoundError:
+                pass
+            doc.add_paragraph(f'{analysis} \n')
+            try:
+                doc.add_picture(check_suffix(analysis_img[1]), width=Inches(2.5))
+            except Exception as e:
+                pass
             list_a = ques1.split('&@')
             while len(list_a) <= 4:
                 list_a.insert(2, '')
@@ -672,7 +652,7 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '判断题':
                 try:
                     tab.ele('@@class^before-icon@@text()=A').click()
@@ -685,7 +665,7 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                     str_j = ''.join(list_j)
                     doc.add_paragraph(str_j)
                     option += str_j + "\n"
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '多选题':
                 if tab.s_ele('xpath://*[@id="body"]/div/div[1]/div[2]/div[2]/div[3]/p[2]/span[2]/div').attr('aria-checked') is None:
                     try:
@@ -719,7 +699,7 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '不定项选择题':
                 if tab.s_ele('xpath://*[@id="body"]/div/div[1]/div[2]/div[2]/div[3]/p[2]/span[2]/div').attr('aria-checked') is None:
                     try:
@@ -753,7 +733,7 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '排序题':
                 options = tab.s_eles('@class^option')
                 for j in options:
@@ -778,7 +758,7 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '填空题':
                 try:
                     s = tab.s_ele('xpath://*[@id="body"]/div/div[1]/div[2]/div[2]/div[3]/p[2]/span[2]/div').attr(
@@ -794,7 +774,7 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                             print(e)
                 except Exception as e:
                     print(e)
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '简答题':
                 try:
                     s = tab.s_ele('xpath://*[@id="body"]/div/div[1]/div[2]/div[2]/div[3]/p[2]/span[2]/div').attr(
@@ -810,9 +790,9 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                             print(e)
                 except Exception as e:
                     print(e)
-                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '论述题':
-                answer = tab.s_ele('@class=right-ans ').text.replace('\u2003', ':')[:-1]
+                answer = tab.s_ele('@class=right-ans ').text.replace('\u2003', ':')
             else:
                 print('暂不支持该题型')
 
@@ -846,9 +826,19 @@ def download_ques_enterprise(ID, delay, begin, file_format, anl_switch):
                 ques1 = f'{i + 1}&@{title}&@{answer[5:]}&@{analysis}\n'
             # 添加答案段落
             doc.add_paragraph(answer)
+            try:
+                answer_img = page.s_ele('@class^mt20', timeout=0.3).ele('tag:img', timeout=0.3)
+                if answer_img.link:
+                    answer_img_url = answer_img.attr('src')
+                    # ques_img_url = f'{ques_img_url}'
+                    answer_img = page.download(answer_img_url, rf'.\{ID}\imgs\answer', rename=f'ques{i + 1}-answer',
+                                               file_exists='skip')
+                doc.add_picture(check_suffix(answer_img[1]), width=Inches(2.5))
+            except ElementNotFoundError:
+                pass
             doc.add_paragraph(f'{analysis} \n')
             try:
-                doc.add_picture(check_suffix(analysis_img[1]))
+                doc.add_picture(check_suffix(analysis_img[1]), width=Inches(2.5))
             except Exception as e:
                 pass
             list_a = ques1.split('&@')

@@ -408,12 +408,12 @@ def download_ques(ID, time, begin, file_format, anl_switch):
                     # ques_img_url = f'{ques_img_url}'
                     answer_img = page.download(answer_img_url, rf'.\{ID}\imgs\answer', rename=f'ques{i + 1}-answer',
                                                file_exists='skip')
-                doc.add_picture(check_suffix(answer_img[1]), width=Inches(2.5))
+                doc.add_picture(answer_img[1], width=Inches(2.5))
             except ElementNotFoundError:
                 pass
             doc.add_paragraph(f'{analysis} \n')
             try:
-                doc.add_picture(check_suffix(analysis_img[1]), width=Inches(2.5))
+                doc.add_picture(analysis_img[1], width=Inches(2.5))
             except Exception as e:
                 pass
             list_a = ques1.split('&@')

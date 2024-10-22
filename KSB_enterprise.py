@@ -153,7 +153,7 @@ def check_suffix(filename, default_suffix='.png'):
     return new_name
 
 
-version = '1.1.2'
+version = '1.1.3'
 
 
 @Gooey(language='chinese', program_name=u'KSB工具(enterprise_version) beta', required_cols=2, optional_cols=2,

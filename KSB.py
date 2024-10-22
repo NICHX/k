@@ -121,7 +121,7 @@ def register_window():
             sys.exit(1)
 
 
-version = '2.5.2'
+version = '2.5.3'
 
 
 @Gooey(language='chinese', program_name=u'KSB下载工具', required_cols=2, optional_cols=2,
@@ -132,7 +132,7 @@ version = '2.5.2'
                'type': 'AboutDialog',
                'menuTitle': '关于',
                'name': 'KSB下载工具\n',
-               'description': 'Created by NICHX !\n 1、修复部分错误 \n 2、优化txt文件排版',
+               'description': 'Created by NICHX !\n 1、修复部分错误',
 
                'version': version,
            }]
@@ -211,7 +211,7 @@ def download_ques(ID, path, time):
                                              file_exists='skip')
                     page.wait(0.3)
                 doc.add_picture(ques_img[1])
-            except ElementNotFoundError:
+            except Exception as e:
                 pass
             topic = page.ele('@class=topic-type').text
             option = ''
@@ -240,7 +240,7 @@ def download_ques(ID, path, time):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '判断题':
                 options = page.ele('@class^select-left').children('@class^option')
                 for j in options:
@@ -249,7 +249,7 @@ def download_ques(ID, path, time):
                     str_j = ''.join(list_j)
                     doc.add_paragraph(str_j)
                     option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '多选题':
                 options = page.s_eles('@class^option')
                 for j in options:
@@ -275,7 +275,7 @@ def download_ques(ID, path, time):
                         str_j = ''.join(list_j)
                         doc.add_paragraph(str_j)
                         option += str_j + "\n"
-                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')[:-1]
+                answer = page.s_ele('@class=right-ans').text.replace('\u2003', ':')
             elif topic == '填空题':
                 answer = '正确答案:' + page.s_ele('@class=mt20').text.replace('\u2003', ':')
             elif topic == '简答题':
@@ -297,7 +297,7 @@ def download_ques(ID, path, time):
                             analysis_img = page.download(analysis_img_url, rf'.\imgs\{ID}\analysis',
                                                          rename=f'ques{i + 1}-analysis', file_exists='skip')
                             page.wait(0.3)
-                except ElementNotFoundError:
+                except Exception as e:
                     pass
             except Exception as e:
                 print(e)
@@ -323,7 +323,8 @@ def download_ques(ID, path, time):
                 page.wait(float(time))
             except Exception as e:
                 print(e)
-        except ElementNotFoundError:
+        except Exception as e:
+            print(e)
             print(f'第{i + 1}题下载失败\n', flush=True)
             with open('error_log.txt', "a", encoding='utf8') as f:
                 f.write(f'第{i + 1}题下载失败\n')  # 自带文件关闭功能，不需要再写f.close()

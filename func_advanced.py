@@ -48,11 +48,11 @@ def download_ques_advanced(question_id, name, delay, start_num, default_open, pa
         tab = browser.new_tab()
     elif tab.url != home_url:
         tab.get(login_url)
-        tab.wait.url_change('https://www.zaixiankaoshi.com/home/', timeout=30)
+        tab.wait.url_change('https://www.zaixiankaoshi.com/home/', timeout=120)
         tab = browser.new_tab()
     tab.get(url)
-    tab.wait.eles_loaded('@style=float: left; font-weight: 700;', timeout=1)
-    n = tab.ele('@style=float: left; font-weight: 700;', timeout=1).text
+    tab.wait.eles_loaded('@class=topic-num', timeout=1)
+    n = tab.ele('@class=topic-num', timeout=1).text
     number = re.findall(r"/(\d+)、", n)[0]
 
     # 打开背题模式
@@ -329,7 +329,7 @@ def download_ques_advanced(question_id, name, delay, start_num, default_open, pa
                     with open(rf'.\{question_id}\{question_id}_error_log.txt', "a", encoding='utf8') as f:
                         f.write(f'第{i + 1}题下载失败，报错信息：{ques[-1]}\n')  # 自带文件关闭功能，不需要再写f.close()
                     try:
-                        tab.ele('@@class:el-button el-button--primary el-button--small@@text():下一题',
+                        tab.ele('@@class=tit@@text():下一题',
                                 timeout=5).click()
                         tab.wait(float(delay) ,float(delay)+1)
                     except Exception as e:
@@ -424,7 +424,7 @@ def download_ques_advanced(question_id, name, delay, start_num, default_open, pa
             wb.save(rf'.\{question_id}\{question_id}-{name}-第{start_num}题开始.xlsx')
 
             try:
-                tab.ele('@@class:el-button el-button--primary el-button--small@@text():下一题',
+                tab.ele('@@class=tit@@text():下一题',
                         timeout=5).click()
                 tab.wait(float(delay) ,float(delay)+1)
             except Exception as e:
